@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="script.js" defer></script>
+    <title>SPARCS Bounty</title>
+    <style>
+        body {
+            background-color: #021405;
+            color: #39ff14;
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        #rain-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .clover-wrapper {
+            position: absolute;
+            width: 85px;
+            height: 95px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            pointer-events: auto;
+            transition: transform 0.1s ease, filter 0.1s ease;
+        }
+
+        .clover-wrapper:hover {
+            transform: scale(1.3) rotate(12deg);
+            filter: brightness(1.3) drop-shadow(0 0 10px #39ff14);
+        }
+
+        .clover-shape {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 45%, #053b11 0%, #0d6e22 55%, #18a337 100%);
+            clip-path: url(#smooth-five-leaf-clover);
+            z-index: 1;
+        }
+
+        .clover-letter {
+            position: relative;
+            z-index: 2;
+            color: #ffffff;
+            font-size: 22px;
+            font-weight: 900;
+            font-family: 'Arial Black', Impact, sans-serif;
+            text-align: center;
+            line-height: 1;
+            transform: translateY(-6px);
+            text-shadow: 
+                -2px -2px 0 #000,  
+                 2px -2px 0 #000,
+                -2px  2px 0 #000,
+                 2px  2px 0 #000,
+                 0 0 8px #00ff66;
+            pointer-events: none;
+        }
+
+        /* Windows 95 style main interface box */
+        .window {
+            background-color: #c0c0c0;
+            border: 3px solid #fff;
+            border-right-color: #808080;
+            border-bottom-color: #808080;
+            box-shadow: 8px 8px 0px rgba(0,0,0,0.6);
+            padding: 2px;
+            width: 480px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+
+        .title-bar {
+            background: linear-gradient(90deg, #004411, #00cc44);
+            color: white;
+            padding: 5px 8px;
+            font-weight: bold;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .content {
+            padding: 16px 20px;
+            color: #000;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 6px;
+        }
+
+        .unclickable-input {
+            width: 100%;
+            padding: 8px 10px;
+            background-color: #050f05;
+            color: #39ff14;
+            font-family: 'Courier New', monospace;
+            border: 2px inset #fff;
+            box-sizing: border-box;
+            min-height: 40px;
+            font-size: 18px;
+            letter-spacing: 2px;
+            word-break: break-all;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .unclickable-input.active-field {
+            border: 2px solid #39ff14;
+            box-shadow: inset 0 0 6px rgba(57, 255, 20, 0.4);
+        }
+
+        .btn-reset {
+            padding: 0 12px;
+            background: #e0e0e0;
+            border: 2px solid #fff;
+            border-right-color: #5a5a5a;
+            border-bottom-color: #5a5a5a;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        #btn-submit {
+            width: 140px;
+            height: 38px;
+            background: #e0e0e0;
+            border: 2px solid #fff;
+            border-right-color: #5a5a5a;
+            border-bottom-color: #5a5a5a;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .hint-text {
+            font-size: 11px;
+            margin: 4px 0 0 0;
+            color: #333;
+        }
+
+        /* Flappy Bird Modal Overlay */
+        #game-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #game-window {
+            width: 340px;
+            background-color: #c0c0c0;
+            border: 3px solid #fff;
+            border-right-color: #808080;
+            border-bottom-color: #808080;
+            box-shadow: 10px 10px 0px rgba(0,0,0,0.8);
+            padding: 2px;
+        }
+
+        #flappy-canvas {
+            background: #70c5ce;
+            display: block;
+            margin: 10px auto;
+            border: 2px inset #fff;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 5-Leaf Clover SVG Silhouette Definition -->
+    <svg width="0" height="0" style="position: absolute;">
+        <defs>
+            <clipPath id="smooth-five-leaf-clover" clipPathUnits="objectBoundingBox">
+                <path d="
+                    M 0.50 0.44
+                    C 0.38 0.32, 0.25 0.08, 0.50 0.00
+                    C 0.75 0.08, 0.62 0.32, 0.50 0.44
+                    
+                    C 0.62 0.34, 0.88 0.18, 0.98 0.34
+                    C 1.05 0.55, 0.78 0.62, 0.50 0.44
+                    
+                    C 0.68 0.52, 0.95 0.68, 0.84 0.88
+                    C 0.62 0.95, 0.52 0.68, 0.50 0.44
+                    
+                    C 0.51 0.60, 0.53 0.78, 0.40 1.00
+                    C 0.48 0.82, 0.50 0.66, 0.50 0.44
+                    
+                    C 0.48 0.68, 0.38 0.95, 0.16 0.88
+                    C 0.05 0.68, 0.32 0.52, 0.50 0.44
+                    
+                    C 0.22 0.62, -0.05 0.55, 0.02 0.34
+                    C 0.12 0.18, 0.38 0.34, 0.50 0.44
+                    Z
+                " />
+            </clipPath>
+        </defs>
+    </svg>
+
+    <!-- Clover Falling Container -->
+    <div id="rain-container"></div>
+
+    <!-- Main Window Interface -->
+    <div class="window">
+        <div class="title-bar">
+            <span>malunggay_pandesal.exe</span>
+            <span>[?]</span>
+        </div>
+        <div class="content">
+            <p style="margin-top:0; font-size: 12px; font-weight: bold; color: #005511;">
+                🍀 SYSTEM NOTICE: Catch falling 5-leaf clovers to secure pandesal.
+            </p>
+            
+            <!-- Username Input -->
+            <div class="form-group">
+                <label><b>Username:</b></label>
+                <div class="input-row">
+                    <div id="username-display" class="unclickable-input active-field" onclick="setActiveTarget('username')"></div>
+                    <button type="button" class="btn-reset" onclick="clearUser()">Reset</button>
+                </div>
+            </div>
+
+            <!-- Password Input -->
+            <div class="form-group">
+                <label><b>Password:</b></label>
+                <div class="input-row">
+                    <div id="password-display" class="unclickable-input" onclick="setActiveTarget('password')"></div>
+                    <button type="button" class="btn-reset" onclick="clearPass()">Reset</button>
+                </div>
+                <div class="hint-text">Click an input box to select it, then catch clovers to type into it.</div>
+            </div>
+
+            <!-- Math CAPTCHA Verification -->
+            <div class="form-group">
+                <label><b>Test your braincells:</b></label>
+                <div class="unclickable-input" style="background:#101a10; color:#ffcc00; display:flex; align-items:center; justify-content:center; font-size:16px;">
+                    Solve: <span id="math-problem" style="margin-left:5px; font-weight:bold;"></span>
+                </div>
+            </div>
+
+            <!-- Anti-Bot Checkbox -->
+            <div style="font-size: 11px; margin: 10px 0;">
+                <input type="checkbox" id="terms-box">
+                <label for="terms-box">I agree that i am happy with this process.</label>
+            </div>
+
+            <div style="text-align: right; position: relative; height: 42px;">
+                <button id="btn-submit">LOG IN</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flappy Bird 2FA Modal -->
+    <div id="game-overlay">
+        <div id="game-window">
+            <div class="title-bar" style="background: linear-gradient(90deg, #800000, #ff0000);">
+                <span>malunggay_bird.exe</span>
+                <span>[X]</span>
+            </div>
+            <div style="padding: 10px; text-align: center; color: #000;">
+                <b style="font-size: 13px;">FINAL AUTHENTICATION STEP</b>
+                <p style="font-size: 11px; margin: 4px 0;">Score <b>3 points</b> to unlock access. Crash = Reset Progress.</p>
+                <canvas id="flappy-canvas" width="280" height="360"></canvas>
+                <p style="font-size: 11px; color: #444; margin: 2px 0;">[ Spacebar ] or [ Click Canvas ] to Flap</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
