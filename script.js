@@ -1,7 +1,7 @@
 let enteredUsername = "";
 let enteredPassword = "";
 let activeTarget = "username";
-const pool = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".split("");
+const pool = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".split("");
 
 const rainContainer = document.getElementById('rain-container');
 const usernameDisplay = document.getElementById('username-display');
@@ -14,6 +14,51 @@ const gameOverlay = document.getElementById('game-overlay');
 // Audio Handler
 const customClickAudio = new Audio('malunggay-pandesal.mp3');
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+//target username and password
+const REQUIRED_USERNAME = "SPARCS";
+const REQUIRED_PASSWORD = "BsCs";
+
+//username and password validator
+function validateCredentials() {
+    const errorBox = document.getElementById('password-rules-error');
+    
+    // Check Username
+    if (enteredUsername !== REQUIRED_USERNAME) {
+        if (errorBox) {
+            errorBox.textContent = `❌ Invalid username. (Hint: Case-sensitive)`;
+            errorBox.style.display = 'block';
+        }
+        return false;
+    }
+
+    // Check Password
+    if (enteredPassword !== REQUIRED_PASSWORD) {
+        if (errorBox) {
+            errorBox.textContent = `❌ Incorrect password. (Hint: Case-sensitive, spaces matter!)`;
+            errorBox.style.display = 'block';
+        }
+        return false;
+    }
+
+    if (errorBox) errorBox.style.display = 'none';
+    return true;
+}
+
+window.addEventListener('keydown', (e) => {
+    // Only capture space if the 2FA game is NOT running
+    if (e.code === 'Space' && gameOverlay.style.display !== 'flex') {
+        e.preventDefault();
+        playPopSound();
+        if (activeTarget === 'username') {
+            enteredUsername += " ";
+            usernameDisplay.textContent = enteredUsername;
+        } else {
+            enteredPassword += " ";
+            passwordDisplay.textContent = "•".repeat(enteredPassword.length);
+        }
+    }
+});
 
 function playPopSound() {
     if (customClickAudio.src && !customClickAudio.error) {
@@ -70,12 +115,14 @@ function spawnClover() {
     letterInner.textContent = randomChar;
     cloverWrapper.appendChild(letterInner);
 
-    cloverWrapper.style.left = Math.random() * 90 + "vw";
-    let topPosition = -95;
-    cloverWrapper.style.top = topPosition + "px";
+    let leftPos = Math.random() * 90;
+    let topPos = -100;                
 
-    const speed = 1.5 + Math.random() * 3;
-    const sway = (Math.random() - 0.5) * 1.5;
+    cloverWrapper.style.left = `${leftPos}vw`;
+    cloverWrapper.style.top = `${topPos}px`;
+
+    const fallSpeed = 1 + Math.random() * 1.0;
+    const swayAmount = (Math.random() - 0.5) * 0.1;
 
     cloverWrapper.addEventListener('mousedown', () => {
         playPopSound();
@@ -90,28 +137,34 @@ function spawnClover() {
 
         cloverShape.style.background = '#39ff14';
         cloverWrapper.style.transform = 'scale(1.8)';
-        setTimeout(() => cloverWrapper.remove(), 100);
+        setTimeout(() => {
+            if (cloverWrapper.parentNode) cloverWrapper.remove();
+        }, 100);
     });
 
     rainContainer.appendChild(cloverWrapper);
 
+    // Animation Loop
     function fall() {
-        if (!cloverWrapper.parentNode) return;
-        topPosition += speed;
-        let currentLeft = parseFloat(cloverWrapper.style.left);
-        cloverWrapper.style.left = (currentLeft + sway) + "vw";
-        cloverWrapper.style.top = topPosition + "px";
+        if (!document.body.contains(cloverWrapper)) return;
 
-        if (topPosition < window.innerHeight) {
+        topPos += fallSpeed;
+        leftPos += swayAmount;
+
+        cloverWrapper.style.top = `${topPos}px`;
+        cloverWrapper.style.left = `${leftPos}vw`;
+
+        if (topPos < window.innerHeight + 100) {
             requestAnimationFrame(fall);
         } else {
             cloverWrapper.remove();
         }
     }
+
     requestAnimationFrame(fall);
 }
 
-setInterval(spawnClover, 240);
+setInterval(spawnClover, 200);
 
 function clearUser() {
     enteredUsername = "";
@@ -137,16 +190,16 @@ submitBtn.addEventListener('mouseover', () => {
 // Verification & Triggering the Minigame
 submitBtn.addEventListener('click', (e) => {
     e.preventDefault();
+
     if (!termsBox.checked) {
         alert("Error: Please agree to the check box first.");
         return;
     }
-    if (enteredUsername.trim() === "") {
-        alert("Error: Username is required.");
-        return;
-    }
-    if (enteredPassword.trim() === "") {
-        alert("Error: Password is required.");
+
+    if (!validateCredentials()) {
+        alert("ACCESS DENIED:\nIncorrect credentials. Progress wiped!");
+        clearUser();
+        clearPass();
         return;
     }
 
@@ -156,6 +209,8 @@ submitBtn.addEventListener('click', (e) => {
         startFlappyBird();
     } else {
         alert("DENIED: You are not from Earth.");
+        clearUser();
+        clearPass();
     }
 });
 
