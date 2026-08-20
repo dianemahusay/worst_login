@@ -14,13 +14,13 @@ worst_login/
 └── .gitattributes         # Git repository configuration
 
 
-## 🚀 Getting Started
+🚀 Getting Started
 
-### Prerequisites
+ Prerequisites
 
 You only need a modern web browser (Chrome, Firefox, Edge, Safari).
 
-### Running Locally
+Running Locally
 
 1. Clone the repository:
 ```bash
