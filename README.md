@@ -53,7 +53,7 @@ cd worst_login
 ---
 ## Credentials
 Username: SPARCS
-Password: mer1nghoy
+Password: BsCs
 
 ## 👥 Contributors
 
