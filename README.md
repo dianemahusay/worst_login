@@ -1,4 +1,4 @@
-# Worst Login UI 🤦‍♂️
+# Worst Login Page 🤦‍♂️
 
 A SPARCS Bounty Submission project for a worst login page.
 ---
